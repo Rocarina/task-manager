@@ -1,8 +1,10 @@
 const API = "https://task-manager-l285.onrender.com/tasks";
 
-// Load tasks
+// Load Tasks
 async function loadTasks() {
+
     try {
+
         const res = await axios.get(API);
         const tasks = res.data;
 
@@ -14,15 +16,24 @@ async function loadTasks() {
             const li = document.createElement("li");
 
             li.innerHTML = `
-                <span class="${task.completed ? "completed" : ""}">
-                    ${task.title}
-                </span>
+
+                <div class="task-info">
+
+                    <span class="${task.completed ? "completed" : ""}">
+                        ${task.title}
+                    </span>
+
+                    <span class="category ${task.category.toLowerCase()}">
+                        ${task.category}
+                    </span>
+
+                </div>
 
                 <div class="buttons">
 
                     <button
                         class="edit-btn"
-                        onclick="editTask('${task._id}', '${task.title.replace(/'/g, "\\'")}')">
+                        onclick="editTask('${task._id}','${task.title.replace(/'/g,"\\'")}')">
 
                         Edit
 
@@ -45,6 +56,7 @@ async function loadTasks() {
                     </button>
 
                 </div>
+
             `;
 
             list.appendChild(li);
@@ -52,23 +64,31 @@ async function loadTasks() {
         });
 
     } catch (err) {
+
         console.error(err);
+
     }
+
 }
 
 // Add Task
 async function addTask() {
 
     const input = document.getElementById("taskInput");
+    const category = document.getElementById("category").value;
 
     if (input.value.trim() === "")
         return;
 
     await axios.post(API, {
-        title: input.value
+
+        title: input.value,
+        category: category
+
     });
 
     input.value = "";
+    document.getElementById("category").value = "Personal";
 
     loadTasks();
 
@@ -83,7 +103,9 @@ async function editTask(id, currentTitle) {
         return;
 
     await axios.put(`${API}/${id}`, {
+
         title: newTitle
+
     });
 
     loadTasks();
@@ -94,7 +116,9 @@ async function editTask(id, currentTitle) {
 async function toggleTask(id, completed) {
 
     await axios.put(`${API}/${id}`, {
+
         completed
+
     });
 
     loadTasks();

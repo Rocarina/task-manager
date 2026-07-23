@@ -24,10 +24,18 @@ h1 {
     display: flex;
     gap: 12px;
     margin-bottom: 30px;
+    align-items: center;
 }
 
 .task-input input {
     flex: 1;
+    padding: 15px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.task-input select {
     padding: 15px;
     font-size: 16px;
     border: 1px solid #ccc;
@@ -61,6 +69,34 @@ li {
     padding: 18px;
     border-radius: 10px;
     margin-bottom: 15px;
+}
+
+.task-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.category {
+    display: inline-block;
+    width: fit-content;
+    padding: 5px 10px;
+    border-radius: 15px;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.work {
+    background: #0d6efd;
+}
+
+.personal {
+    background: #198754;
+}
+
+.urgent {
+    background: #dc3545;
 }
 
 .buttons {

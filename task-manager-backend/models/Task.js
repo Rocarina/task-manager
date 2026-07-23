@@ -5,10 +5,18 @@ const taskSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+
+  category: {
+    type: String,
+    enum: ["Work", "Personal", "Urgent"],
+    default: "Personal",
+  },
+
   completed: {
     type: Boolean,
     default: false,
   },
+
   createdAt: {
     type: Date,
     default: Date.now,
