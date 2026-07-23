@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Task = require("../models/Task");
 
-// Get all tasks
+// GET all tasks (Newest First)
 router.get("/", async (req, res) => {
   try {
     const tasks = await Task.find().sort({ createdAt: -1 });
@@ -12,43 +12,61 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Add task
+// ADD task
 router.post("/", async (req, res) => {
   try {
     const task = new Task({
       title: req.body.title,
+      category: req.body.category,
     });
 
-    await task.save();
-    res.status(201).json(task);
+    const newTask = await task.save();
+    res.status(201).json(newTask);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
-// Update task
+// UPDATE task
 router.put("/:id", async (req, res) => {
   try {
-    const task = await Task.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const task = await Task.findById(req.params.id);
 
-    res.json(task);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    if (req.body.title !== undefined) {
+      task.title = req.body.title;
+    }
+
+    if (req.body.category !== undefined) {
+      task.category = req.body.category;
+    }
+
+    if (req.body.completed !== undefined) {
+      task.completed = req.body.completed;
+    }
+
+    const updatedTask = await task.save();
+    res.json(updatedTask);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(400).json({ message: err.message });
   }
 });
 
-// Delete task
+// DELETE task
 router.delete("/:id", async (req, res) => {
   try {
-    await Task.findByIdAndDelete(req.params.id);
+    const task = await Task.findById(req.params.id);
 
-    res.json({
-      message: "Task deleted successfully",
-    });
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    await task.deleteOne();
+
+    res.json({ message: "Task deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
