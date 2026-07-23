@@ -21,6 +21,14 @@ async function loadTasks() {
                 <div class="buttons">
 
                     <button
+                        class="edit-btn"
+                        onclick="editTask('${task._id}', '${task.title.replace(/'/g, "\\'")}')">
+
+                        Edit
+
+                    </button>
+
+                    <button
                         class="complete-btn"
                         onclick="toggleTask('${task._id}', ${!task.completed})">
 
@@ -48,7 +56,7 @@ async function loadTasks() {
     }
 }
 
-// Add task
+// Add Task
 async function addTask() {
 
     const input = document.getElementById("taskInput");
@@ -66,6 +74,22 @@ async function addTask() {
 
 }
 
+// Edit Task
+async function editTask(id, currentTitle) {
+
+    const newTitle = prompt("Edit Task:", currentTitle);
+
+    if (newTitle === null || newTitle.trim() === "")
+        return;
+
+    await axios.put(`${API}/${id}`, {
+        title: newTitle
+    });
+
+    loadTasks();
+
+}
+
 // Complete / Undo
 async function toggleTask(id, completed) {
 
@@ -77,7 +101,7 @@ async function toggleTask(id, completed) {
 
 }
 
-// Delete
+// Delete Task
 async function deleteTask(id) {
 
     await axios.delete(`${API}/${id}`);
