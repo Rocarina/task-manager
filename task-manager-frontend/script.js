@@ -1,17 +1,85 @@
-const API = "https://task-manager-l285.onrender.com/tasks";
+const API = "https://task-manager-l285.onrender.com";
+let token = localStorage.getItem("token");
+
+// Show Task Section if Logged In
+if (token) {
+    document.getElementById("registerSection").style.display = "none";
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("taskSection").style.display = "block";
+    loadTasks();
+}
+
+// Register User
+async function registerUser() {
+    const name = document.getElementById("registerName").value;
+    const email = document.getElementById("registerEmail").value;
+    const password = document.getElementById("registerPassword").value;
+
+    try {
+        await axios.post(`${API}/auth/register`, {
+            name,
+            email,
+            password
+        });
+
+        alert("Registration Successful! Please Login.");
+
+        document.getElementById("registerName").value = "";
+        document.getElementById("registerEmail").value = "";
+        document.getElementById("registerPassword").value = "";
+
+    } catch (err) {
+        alert(err.response.data.message);
+    }
+}
+
+// Login User
+async function loginUser() {
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+
+    try {
+        const res = await axios.post(`${API}/auth/login`, {
+            email,
+            password
+        });
+
+        token = res.data.token;
+        localStorage.setItem("token", token);
+
+        document.getElementById("registerSection").style.display = "none";
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("taskSection").style.display = "block";
+
+        loadTasks();
+
+    } catch (err) {
+        alert(err.response.data.message);
+    }
+}
+
+// Logout
+function logoutUser() {
+    localStorage.removeItem("token");
+    location.reload();
+}
 
 // Load Tasks
 async function loadTasks() {
     try {
-        const res = await axios.get(API);
-        const tasks = res.data;
+        const res = await axios.get(`${API}/tasks`, {
+            headers: {
+                Authorization: token
+            }
+        });
 
+        const tasks = res.data;
         const list = document.getElementById("taskList");
         list.innerHTML = "";
 
         tasks.forEach(task => {
 
-            const category = task.category ? task.category : "Personal";
+            const category = task.category || "Personal";
 
             const li = document.createElement("li");
 
@@ -22,7 +90,7 @@ async function loadTasks() {
                         ${task.title}
                     </span>
 
-                    <span class="category ${String(category).toLowerCase()}">
+                    <span class="category ${category.toLowerCase()}">
                         ${category}
                     </span>
 
@@ -30,22 +98,19 @@ async function loadTasks() {
 
                 <div class="buttons">
 
-                    <button
-                        class="edit-btn"
-                        onclick="editTask('${task._id}', ${JSON.stringify(task.title)})">
-                        Edit
+                    <button class="edit-btn"
+                    onclick="editTask('${task._id}','${task.title}')">
+                    Edit
                     </button>
 
-                    <button
-                        class="complete-btn"
-                        onclick="toggleTask('${task._id}', ${!task.completed})">
-                        ${task.completed ? "Undo" : "Complete"}
+                    <button class="complete-btn"
+                    onclick="toggleTask('${task._id}',${!task.completed})">
+                    ${task.completed ? "Undo" : "Complete"}
                     </button>
 
-                    <button
-                        class="delete-btn"
-                        onclick="deleteTask('${task._id}')">
-                        Delete
+                    <button class="delete-btn"
+                    onclick="deleteTask('${task._id}')">
+                    Delete
                     </button>
 
                 </div>
@@ -56,91 +121,82 @@ async function loadTasks() {
         });
 
     } catch (err) {
-        console.error("Error loading tasks:", err);
+        console.error(err);
     }
 }
 
 // Add Task
 async function addTask() {
 
-    const input = document.getElementById("taskInput");
+    const title = document.getElementById("taskInput").value;
     const category = document.getElementById("category").value;
 
-    if (input.value.trim() === "") {
-        alert("Please enter a task.");
+    if (title.trim() === "") {
+        alert("Enter a task");
         return;
     }
 
-    try {
-
-        await axios.post(API, {
-            title: input.value.trim(),
-            category: category
+    await axios.post(`${API}/tasks`,
+        {
+            title,
+            category
+        },
+        {
+            headers: {
+                Authorization: token
+            }
         });
 
-        input.value = "";
-        document.getElementById("category").value = "Personal";
+    document.getElementById("taskInput").value = "";
 
-        loadTasks();
-
-    } catch (err) {
-        console.error("Error adding task:", err);
-    }
-
+    loadTasks();
 }
 
 // Edit Task
 async function editTask(id, currentTitle) {
 
-    const newTitle = prompt("Edit Task", currentTitle);
+    const title = prompt("Edit Task", currentTitle);
 
-    if (newTitle === null || newTitle.trim() === "")
-        return;
+    if (!title) return;
 
-    try {
-
-        await axios.put(`${API}/${id}`, {
-            title: newTitle.trim()
+    await axios.put(`${API}/tasks/${id}`,
+        {
+            title
+        },
+        {
+            headers: {
+                Authorization: token
+            }
         });
 
-        loadTasks();
-
-    } catch (err) {
-        console.error("Error editing task:", err);
-    }
-
+    loadTasks();
 }
 
-// Complete / Undo
+// Complete Task
 async function toggleTask(id, completed) {
 
-    try {
-
-        await axios.put(`${API}/${id}`, {
-            completed: completed
+    await axios.put(`${API}/tasks/${id}`,
+        {
+            completed
+        },
+        {
+            headers: {
+                Authorization: token
+            }
         });
 
-        loadTasks();
-
-    } catch (err) {
-        console.error("Error updating task:", err);
-    }
-
+    loadTasks();
 }
 
 // Delete Task
 async function deleteTask(id) {
 
-    try {
+    await axios.delete(`${API}/tasks/${id}`,
+        {
+            headers: {
+                Authorization: token
+            }
+        });
 
-        await axios.delete(`${API}/${id}`);
-
-        loadTasks();
-
-    } catch (err) {
-        console.error("Error deleting task:", err);
-    }
-
+    loadTasks();
 }
-
-loadTasks();

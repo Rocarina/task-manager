@@ -1,11 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const Task = require("../models/Task");
+const auth = require("../middleware/auth");
 
-// GET all tasks (Newest First)
-router.get("/", async (req, res) => {
+// GET all tasks of logged-in user
+router.get("/", auth, async (req, res) => {
   try {
-    const tasks = await Task.find().sort({ createdAt: -1 });
+    const tasks = await Task.find({ user: req.user.id }).sort({
+      createdAt: -1,
+    });
+
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -13,14 +17,16 @@ router.get("/", async (req, res) => {
 });
 
 // ADD task
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
   try {
     const task = new Task({
       title: req.body.title,
       category: req.body.category,
+      user: req.user.id,
     });
 
     const newTask = await task.save();
+
     res.status(201).json(newTask);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -28,12 +34,17 @@ router.post("/", async (req, res) => {
 });
 
 // UPDATE task
-router.put("/:id", async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({
+      _id: req.params.id,
+      user: req.user.id,
+    });
 
     if (!task) {
-      return res.status(404).json({ message: "Task not found" });
+      return res.status(404).json({
+        message: "Task not found",
+      });
     }
 
     if (req.body.title !== undefined) {
@@ -49,6 +60,7 @@ router.put("/:id", async (req, res) => {
     }
 
     const updatedTask = await task.save();
+
     res.json(updatedTask);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -56,17 +68,24 @@ router.put("/:id", async (req, res) => {
 });
 
 // DELETE task
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({
+      _id: req.params.id,
+      user: req.user.id,
+    });
 
     if (!task) {
-      return res.status(404).json({ message: "Task not found" });
+      return res.status(404).json({
+        message: "Task not found",
+      });
     }
 
     await task.deleteOne();
 
-    res.json({ message: "Task deleted successfully" });
+    res.json({
+      message: "Task deleted successfully",
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
